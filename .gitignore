@@ -1,0 +1,4 @@
+*.js
+*.zip
+*.pem
+node_modules/
