@@ -17,6 +17,7 @@ const connectToDatabase = async (uri: string): Promise<MongoClient | null> => {
   console.log("=> connect to database");
 
   if (!cachedDb.has(uri)) {
+    console.log("=> creating connection...");
     const connection = await MongoClient.connect(uri, {
       useUnifiedTopology: true,
       ssl: true,
@@ -26,6 +27,7 @@ const connectToDatabase = async (uri: string): Promise<MongoClient | null> => {
     }).then(c => c);
 
     cachedDb.set(uri, connection);
+    console.log("=> connection created...");
   }
 
   return cachedDb.get(uri) ?? null;
@@ -46,8 +48,13 @@ export const handler: Handler<SNSEvent> = async (event: SNSEvent) => {
     Records.map(async record => {
       const message = record.Sns.Message;
       const notification: SesNotification = JSON.parse(message);
+      const { mail } = notification;
       console.log("From SNS:", message);
       console.log(`Got notification of type: ${notification.notificationType}`);
+      const { insertedId: mailObjectId } = await db
+        .collection("mail")
+        .insertOne(mail);
+      console.log(` => create mail: ${mailObjectId}`);
       if (notification.notificationType === "Delivery") {
         const { delivery } = notification;
         const {
@@ -59,6 +66,7 @@ export const handler: Handler<SNSEvent> = async (event: SNSEvent) => {
           remoteMtaIp
         } = delivery;
         await db.collection("deliveries").insertOne({
+          mailObjectId,
           timestamp,
           processingTimeMillis,
           recipients,
@@ -77,6 +85,7 @@ export const handler: Handler<SNSEvent> = async (event: SNSEvent) => {
           ...additional
         } = bounce;
         await db.collection("bounces").insertOne({
+          mailObjectId,
           bounceType,
           bounceSubType,
           bouncedRecipients,
@@ -94,6 +103,7 @@ export const handler: Handler<SNSEvent> = async (event: SNSEvent) => {
           ...additional
         } = complaint;
         db.collection("complaints").insertOne({
+          mailObjectId,
           complainedRecipients,
           timestamp,
           feedbackId,
