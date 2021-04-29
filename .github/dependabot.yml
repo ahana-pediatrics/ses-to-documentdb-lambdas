@@ -1,0 +1,29 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: "@types/aws-lambda"
+    versions:
+    - 8.10.71
+    - 8.10.72
+    - 8.10.73
+    - 8.10.75
+  - dependency-name: "@types/mongodb"
+    versions:
+    - 3.6.10
+    - 3.6.11
+    - 3.6.3
+    - 3.6.5
+    - 3.6.6
+    - 3.6.7
+    - 3.6.8
+    - 3.6.9
+  - dependency-name: mongodb
+    versions:
+    - 3.6.3
+    - 3.6.4
+    - 3.6.5
